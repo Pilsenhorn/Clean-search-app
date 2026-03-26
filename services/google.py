@@ -6,7 +6,10 @@ def get_google_results(query: str):
         params={
             "q": query,
             "google_domain": "google.com",
-            "api_key": "eaf522bbf3651d1acdc134300f8e6a36c16f9f091babbf72b0eabf05596da8cc"
+            "api_key": "eaf522bbf3651d1acdc134300f8e6a36c16f9f091babbf72b0eabf05596da8cc",
+            "hl": "cs",
+            "gl": "cz",
+            "safe": "active"
         }
     )
     data = response.json()
