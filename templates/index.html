@@ -3,17 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clean search app</title>
+    <title>Clean search - FastAPI Search App</title>
+    <meta name="description" content="Minimalist search app bulid with FastAPI and Tailwind. Clean UI, fast results, modern UX.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <form id="searchForm">
-        <input type="text" id="query" placeholder="Hledat...">
-        <button type="submit">Hledat</button>
-    </form>
+<body class="bg-[#161925] text-[#CBF7ED] min-h-screen flex flex-col items-center font-[family-name:Inter] scroll-smooth">
+   <div class="w-full flex flex-col items-center px-4">
+        <h1 class="text-4xl mt-12 md:text-6xl font-medium mb-6 tracking-[0.15rem] uppercase">Clean search</h1>
+        <p class="text-md text-[#cbf87ed]/80 mt-2 tracking-wide mb-10">Minimalist search interface. Fast, clean, no distractions.</p>
 
-    <div id="results">
+        <div class="w-full sticky shadow-sm top-0 z-50 backdrop-blur-xl bg-[#161925]/20 px-4">
+            <div class="max-w-2xl mx-auto px-4 py-4">
+                <form id="searchForm" class="w-full mt-6">
+                    <input type="text" id="query" placeholder="Search...(press Enter)" aria-label="Search query" class="w-full p-4 rounded-xl bg-[#406E8E] text-base placeholder:text-[#8EA8C3]/60 border border-[#8EA8C3] focus:outline-none focus:ring-2 focus:ring-[#23395B] transition tracking-wider" />
+                    <button type="submit" class="cursor-pointer w-full font-medium mt-4 p-4 bg-[#23395B] hover:bg-[#406E8E] text-[#CBF7ED] rounded-xl transition tracking-wide">Search</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="results" class="w-full max-w-2xl mt-12 px-4 pb-10 space-y-4"></div>
 
     </div>
+
     <script> 
         const form = document.getElementById("searchForm")
         const input = document.getElementById("query")
@@ -35,13 +47,19 @@
             const query = input.value.trim()
 
             if (!query) {
-                container.innerHTML = "<p>Zadejte hledaný výraz.</p>"
+                container.innerHTML = "<p class=\"text-sm text-[#CBF7ED] mb-4 tracking-wider\">Enter a search query.</p>"
                 return
             }
 
             const requestId = ++currentRequestId
 
-            container.innerHTML = "<p>Načítám výsledky...</p>"
+            container.innerHTML = `
+                <div class="space-y-4 animate-pulse">
+                    <div class="h-6 bg-[#23395B]/50 rounded w-3/4"></div>
+                    <div class="h-4 bg-[#23395B]/50 rounded w-full"></div>
+                    <div class="h-4 bg-[#23395B]/50 rounded w-5/6"></div>
+                </div>
+            `
             button.disabled = true
 
             fetch(`/search?q=${query}`)
@@ -56,23 +74,34 @@
 
                     const results = data.results || data
                     if (!results.length) {
-                        container.innerHTML = "<p>Nebyly nalezeny žádné výsledky.</p>"
+                        container.innerHTML = "<p class=\"text-sm text-[#CBF7ED] mb-4 tracking-wider\">No results found.</p>"
                         return
                     }
 
                     const html = results.map(item => `
-                        <div>
-                            <h3>
-                                <a href="${item.link}" target="_blank">
-                                    ${item.title}
-                                </a>
-                            </h3>
-                            <p>${item.snippet}</p>
+                        <div class="p-4 rounded-xl bg-[#23395B]/40 border border-[#8EA8C3]/20 
+                                    hover:border-[#CBF7ED]/40 hover:bg-[#23395B]/60 
+                                    transition duration-200">
+
+                            <a href="${item.link}" target="_blank"
+                            class="text-lg font-medium text-[#CBF7ED] hover:text-white">
+                                ${item.title}
+                            </a>
+
+                            <p class="text-sm text-[#CBF7ED]/70 mt-2 leading-relaxed">
+                                ${item.snippet}
+                            </p>
+
+                            <span class="text-xs text-[#8EA8C3]/70 block mt-2">
+                                ${item.link}
+                            </span>
+
                         </div>
+
                     `).join("")
 
                     container.innerHTML = `
-                        <p>Výsledky pro: <strong>${query}</strong></p>
+                        <p class="text-sm text-[#CBF7ED] mb-4 tracking-wider">Results for: <strong class="text-[#CBF7ED] tracking-wider">${query}</strong></p>
                         ${html}
                         `
                 })
@@ -80,8 +109,11 @@
                     if (requestId !== currentRequestId) 
                         return
 
-                    container.innerHTML = "<p>Nepodařilo se načíst výsledky.</p>"
+                    container.innerHTML = `
+                    <p class="text-sm text-[#CBF7ED] mb-4 tracking-wider">Failed to load results.</p>
+                `
                 })
+                
                 .finally(() => {
                     button.disabled = false
                     input.focus()
