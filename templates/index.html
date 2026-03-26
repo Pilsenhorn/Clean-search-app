@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clean search app</title>
+</head>
+<body>
+    <form id="searchForm">
+        <input type="text" id="query" placeholder="Hledat...">
+        <button type="submit">Hledat</button>
+    </form>
+
+    <div id="results">
+
+    </div>
+    <script> 
+        const form = document.getElementById("searchForm")
+        const input = document.getElementById("query")
+        const container = document.getElementById("results")
+        const button = form.querySelector("button")
+
+        let currentRequestId = 0
+
+        form.addEventListener("submit", function (e) {
+            e.preventDefault()
+            search()
+        })
+
+        function search() {
+            if (button.disabled) {
+                return
+            }
+
+            const query = input.value.trim()
+
+            if (!query) {
+                container.innerHTML = "<p>Zadejte hledaný výraz.</p>"
+                return
+            }
+
+            const requestId = ++currentRequestId
+
+            container.innerHTML = "<p>Načítám výsledky...</p>"
+            button.disabled = true
+
+            fetch(`/search?q=${query}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Server error")
+                    }
+                    return response.json()
+                })
+                .then(data => {
+                    if (requestId !== currentRequestId) return
+
+                    const results = data.results || data
+                    if (!results.length) {
+                        container.innerHTML = "<p>Nebyly nalezeny žádné výsledky.</p>"
+                        return
+                    }
+
+                    const html = results.map(item => `
+                        <div>
+                            <h3>
+                                <a href="${item.link}" target="_blank">
+                                    ${item.title}
+                                </a>
+                            </h3>
+                            <p>${item.snippet}</p>
+                        </div>
+                    `).join("")
+
+                    container.innerHTML = `
+                        <p>Výsledky pro: <strong>${query}</strong></p>
+                        ${html}
+                        `
+                })
+                .catch(() => {
+                    if (requestId !== currentRequestId) 
+                        return
+
+                    container.innerHTML = "<p>Nepodařilo se načíst výsledky.</p>"
+                })
+                .finally(() => {
+                    button.disabled = false
+                    input.focus()
+                })
+        }
+    </script>
+</body>
+</html>
